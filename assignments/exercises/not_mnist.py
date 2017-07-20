@@ -4,13 +4,12 @@ import time
 import numpy as np
 
 """
-Accuracy: 97%
-Simple convolutional neural network
+
 """
 
 # Step 1: Read in data
 # using TF Learn's built in function to load MNIST data
-MNIST = input_data.read_data_sets('MNIST_data', one_hot=True)
+not_mnist = input_data.read_data_sets('./data', one_hot=True)
 
 
 # make weight variable
@@ -99,16 +98,16 @@ init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     # to visualize using TensorBoard
-    writer = tf.summary.FileWriter('./mnist', sess.graph)
+    writer = tf.summary.FileWriter('./not_mnist', sess.graph)
 
     start_time = time.time()
     sess.run(init)
-    n_batches = int(MNIST.train.num_examples/batch_size)
+    n_batches = int(not_mnist.train.num_examples / batch_size)
     for i in range(n_epochs):  # train the model n_epochs times
         total_loss = 0
 
         for _ in range(n_batches):
-            X_batch, Y_batch = MNIST.train.next_batch(batch_size)
+            X_batch, Y_batch = not_mnist.train.next_batch(batch_size)
             _, l = sess.run([optimizer, loss],
                             feed_dict={X: X_batch, Y: Y_batch, keep_prob: 0.5})
             total_loss += l
@@ -122,15 +121,15 @@ with tf.Session() as sess:
     correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y, 1))
     accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32))
 
-    n_batches = int(MNIST.test.num_examples/batch_size)
+    n_batches = int(not_mnist.test.num_examples / batch_size)
     total_correct_preds = 0
 
     for i in range(n_batches):
-        X_batch, Y_batch = MNIST.test.next_batch(batch_size)
+        X_batch, Y_batch = not_mnist.test.next_batch(batch_size)
         accuracy_batch = sess.run(accuracy,
                                   feed_dict={X: X_batch, Y: Y_batch, keep_prob: 1.0})
         total_correct_preds += accuracy_batch
 
-    print('Accuracy {0}'.format(total_correct_preds / MNIST.test.num_examples))
+    print('Accuracy {0}'.format(total_correct_preds / not_mnist.test.num_examples))
 
     writer.close()
