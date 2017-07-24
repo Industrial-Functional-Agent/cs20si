@@ -28,29 +28,30 @@ def word2vec(batch_gen):
         center_words = tf.placeholder(tf.int32, shape=[BATCH_SIZE], name='center_words')
         target_words = tf.placeholder(tf.int32, shape=[BATCH_SIZE, 1], name='target_words')
 
-    # 2. Define the weight (in this case, embedding matrix)
-    with tf.name_scope('embed'):
-        embed_matrix = tf.Variable(tf.random_uniform([VOCAB_SIZE, EMBED_SIZE],
-                                                     -1.0, 1.0), name='embed_matrix')
+    with tf.device("/gpu:0"):
+        # 2. Define the weight (in this case, embedding matrix)
+        with tf.name_scope('embed'):
+            embed_matrix = tf.Variable(tf.random_uniform([VOCAB_SIZE, EMBED_SIZE],
+                                                         -1.0, 1.0), name='embed_matrix')
 
-    # 3. Inference (compute the forward path of the graph)
-    with tf.name_scope('loss'):
-        embed = tf.nn.embedding_lookup(embed_matrix, center_words, name='embed')
+        # 3. Inference (compute the forward path of the graph)
+        with tf.name_scope('loss'):
+            embed = tf.nn.embedding_lookup(embed_matrix, center_words, name='embed')
 
-        # 4. Define the loss function
-        nce_weight = tf.Variable(tf.truncated_normal([VOCAB_SIZE, EMBED_SIZE],
-                                                     stddev=1.0 / EMBED_SIZE ** 0.5),
-                                 name='nce_weight')
-        nce_bias = tf.Variable(tf.zeros([VOCAB_SIZE]), name='nce_bias')
+            # 4. Define the loss function
+            nce_weight = tf.Variable(tf.truncated_normal([VOCAB_SIZE, EMBED_SIZE],
+                                                         stddev=1.0 / EMBED_SIZE ** 0.5),
+                                     name='nce_weight')
+            nce_bias = tf.Variable(tf.zeros([VOCAB_SIZE]), name='nce_bias')
 
-        loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weight,
-                                             biases=nce_bias,
-                                             labels=target_words,
-                                             inputs=embed,
-                                             num_sampled=NUM_SAMPLED,
-                                             num_classes=VOCAB_SIZE), name='loss')
+            loss = tf.reduce_mean(tf.nn.nce_loss(weights=nce_weight,
+                                                 biases=nce_bias,
+                                                 labels=target_words,
+                                                 inputs=embed,
+                                                 num_sampled=NUM_SAMPLED,
+                                                 num_classes=VOCAB_SIZE), name='loss')
 
-    optimizer = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(loss)
+        optimizer = tf.train.GradientDescentOptimizer(LEARNING_RATE).minimize(loss)
 
     # Phase 2: Execute the computation
 
